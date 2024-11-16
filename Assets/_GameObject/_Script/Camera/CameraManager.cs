@@ -21,6 +21,7 @@ public class CameraManager : MonoBehaviour
     [SerializeField] private float holderRotationSpeed;
     [SerializeField] private float holderMaxAngle;
     [SerializeField] private float holderMinAngle;
+    private Vector3 holderEulerAngle;
     
     [Header("Pivot Offset Data")] 
     [SerializeField] private float pivotOffsetLerpSpeed;
@@ -40,6 +41,8 @@ public class CameraManager : MonoBehaviour
     {
         target = Player.Instance.transform;
 
+        holderEulerAngle = holderT.transform.localRotation.eulerAngles;
+        
         SetCamPivot();
     }
 
@@ -90,29 +93,23 @@ public class CameraManager : MonoBehaviour
 
     #region Holder
 
-    public Vector3 eulerAngle;
     private void RotateHolder()
     {
-        eulerAngle = holderT.localRotation.eulerAngles;
-        eulerAngle.x += UserInput.Instance.MouseLookDelta.y * Constants.PlayerRotationYSen * Time.deltaTime;
+        holderEulerAngle.x -= UserInput.Instance.MouseLookDelta.y * Constants.PlayerRotationYSen * Time.deltaTime;
 
-        if (eulerAngle.x >= 0)
+        Debug.Log($"holderEulerAngle.x {holderEulerAngle.x}");
+        
+        if (holderEulerAngle.x > holderMaxAngle)
         {
-            if (eulerAngle.x > holderMaxAngle)
-            {
-                eulerAngle.x = holderMaxAngle;
-            }
+            holderEulerAngle.x = holderMaxAngle;
         }
-        else
+        
+        if (holderEulerAngle.x < holderMinAngle)
         {
-            eulerAngle.x += 360;
-            if (eulerAngle.x < holderMinAngle)
-            {
-                eulerAngle.x = holderMinAngle;
-            }
+            holderEulerAngle.x = holderMinAngle;
         }
 
-        Quaternion finalRot = Quaternion.Euler(eulerAngle);
+        Quaternion finalRot = Quaternion.Euler(holderEulerAngle);
 
         holderT.localRotation =
             Quaternion.Slerp(holderT.localRotation, finalRot, Time.deltaTime * holderRotationSpeed);
